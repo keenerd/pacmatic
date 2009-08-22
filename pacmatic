@@ -1,0 +1,103 @@
+#! /bin/sh
+
+# configs
+warn_time="3600"  # seconds
+rss_feed="http://www.archlinux.org/feeds/news/"
+log_file="/var/log/arch-news.log"
+
+# log file has one line per entry, with a unix time stamp and escaped news blurb
+
+# Issues:
+# Multiple RSS updates are skipped, only reports most recent.
+# Lots of dirty hacks for processing the RSS subset of XML.
+
+function clean_rss ()  # none : xml
+{
+    # make xml less unfriendly to grep
+    # escape \n | remove literal \n | opening tags get a line
+    wget -q -O - "$rss_feed" | sed "s/^/\\\\n/g" | tr -s "\r\n" " " | sed -r "s/<[^\/]/\n&/g"
+}
+
+function tag_chop ()  # xml string : string
+{
+    # this only works for the innermost tags
+    local data=$1
+    local tag=$2
+    echo "$data" | grep -o "<$tag>.*</$tag>" | sed "s/<$tag>//g" | sed "s/<\/$tag>//g"
+}
+
+function log_time ()  # datetime : seconds
+{
+    # turns a timestamp from pacman.log into unix time
+    local stamp=`echo "$1 $2" | grep -o -E "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}"`
+    date -d "$stamp" +%s
+}
+
+function last_sync ()  # none : datetime
+{
+    log_time `grep 'synchronizing package lists' /var/log/pacman.log | tail -n 1`
+}
+
+function last_upgrade ()  # none : datetime
+{
+    log_time `grep 'starting full system upgrade' /var/log/pacman.log | tail -n 1`
+}
+
+function publication_dates ()  # xml : seconds
+{
+    # collect xml time stamps and unix time them
+    tag_chop "$1" "pubDate" | while read line ; do
+        date -d "$line" +%s
+    done
+}
+
+function get_news_log ()  # none : seconds
+{
+    # returns timestamp of last news seen
+    if [ -f $log_file ]; then
+        tail -n 1 $log_file | grep -o "^[0-9]*"
+    else
+        echo "0"
+    fi
+}
+
+function check_news ()
+{
+    clean=`clean_rss`
+    pubdates=`publication_dates "$clean"`
+    descriptions=`tag_chop "$clean" "description" | grep -v "Recent News Updates"`
+    recent_date=`echo "$pubdates" | head -n 1`
+    recent_news=`echo "$descriptions" | head -n 1`
+    if [ $(( $recent_date )) -gt $(( `get_news_log` )) ]; then
+        echo -e "$recent_news"
+        echo "$recent_date $recent_news" >> $log_file
+    fi
+}
+
+current_time=`date +%s`
+sync_time=`last_sync`
+upgrade_time=`last_upgrade`
+
+case "$1" in 
+    -Syu)
+        check_news
+        ;;
+    -Su)
+        check_news
+        ;;
+    -S)
+        check_news
+        if [ $(( $sync_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
+            echo -e "\n\nWarning: stale installation, rerun with '-Su'\n\n"
+        fi
+	;;
+    -Sy)
+        check_news
+        if [ $(( $current_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
+            echo -e "\n\nWarning: stale installation, rerun with '-Su'\n\n"
+        fi
+	;;
+esac
+
+pacman $*
+
