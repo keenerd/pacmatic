@@ -10,6 +10,7 @@ log_file="/var/log/arch-news.log"
 # Issues:
 # Multiple RSS updates are skipped, only reports most recent.
 # Lots of dirty hacks for processing the RSS subset of XML.
+# pacdiff integration is pretty crude.
 
 function clean_rss ()  # none : xml
 {
@@ -79,25 +80,47 @@ sync_time=`last_sync`
 upgrade_time=`last_upgrade`
 
 case "$1" in 
-    -Syu)
-        check_news
-        ;;
-    -Su)
+    -Syu|-Su)
         check_news
         ;;
     -S)
         check_news
         if [ $(( $sync_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
-            echo -e "\n\nWarning: stale installation, rerun with '-Su'\n\n"
+            echo -e "\n\nWarning: stale installation, rerun with '-Syu'\n\n"
         fi
 	;;
     -Sy)
         check_news
         if [ $(( $current_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
-            echo -e "\n\nWarning: stale installation, rerun with '-Su'\n\n"
+            echo -e "\n\nWarning: stale installation, rerun with '-Syu'\n\n"
         fi
 	;;
 esac
 
 pacman $*
+
+# this section is a little clumsy
+case "$1" in
+    -Syu|-Su|-S|-Sy)
+        echo -e "\n\n"
+        find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
+	echo -n "pacnew files found.  Update files now? (Y/n)"
+	read char
+	if [ -z "$char" ]; then
+	    pacdiff
+	fi
+	case "$char" in
+	    Y|y)
+	        pacdiff
+		;;
+	    N|n)
+	        ;;
+	    *)
+	        ;;
+	esac
+	;;
+    *)
+        ;;
+esac
+
 
