@@ -36,11 +36,13 @@ function log_time ()  # datetime : seconds
 
 function last_sync ()  # none : datetime
 {
+    # can not tell if last sync failed/aborted
     log_time `grep 'synchronizing package lists' /var/log/pacman.log | tail -n 1`
 }
 
 function last_upgrade ()  # none : datetime
 {
+    # can not tell if last update failed/aborted
     log_time `grep 'starting full system upgrade' /var/log/pacman.log | tail -n 1`
 }
 
@@ -75,6 +77,11 @@ function check_news ()
     fi
 }
 
+function pacnew_count ()
+{
+    find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
+}
+
 current_time=`date +%s`
 sync_time=`last_sync`
 upgrade_time=`last_upgrade`
@@ -97,14 +104,15 @@ case "$1" in
 	;;
 esac
 
+old_pc=`pacnew_count`
 pacman $*
+new_pc=`pacnew_count`
+add_pc=$(( $new_pc - $old_pc ))
 
 # this section is a little clumsy
 case "$1" in
     -Syu|-Su|-S|-Sy)
-        echo -e "\n\n"
-        find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
-	echo -n "pacnew files found.  Update files now? (Y/n)"
+	echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
 	read char
 	if [ -z "$char" ]; then
 	    pacdiff
