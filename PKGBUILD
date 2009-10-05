@@ -1,16 +1,16 @@
 # Contributor: Kyle Keen <keenerd@gmail.com>
 pkgname=pacmatic
-pkgver=20090901
+pkgver=20091004
 pkgrel=1
 pkgdesc="A pacman wrapper to avoid bricking your system and such other surprises."
-arch=('i686' 'x86_64')
+arch=('any')
 url="http://kmkeen.com/pacmatic/"
 license=('GPL')
 depends=('pacman' 'bash' 'wget' 'pacman-contrib')
 makedepends=()
-optdepends=('vi' 'vim')
+optdepends=('vim')
 source=(http://kmkeen.com/pacmatic/$pkgname-$pkgver.tar.gz)
-md5sums=('f8948f4ffb7135ad665a7cba63fbcb34')
+md5sums=('8dc473930fcca5f1007626c3a38944b7')
 
 build() {
   cd $startdir/src/$pkgname
