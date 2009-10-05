@@ -11,12 +11,13 @@ log_file="/var/log/arch-news.log"
 # Multiple RSS updates are skipped, only reports most recent.
 # Lots of dirty hacks for processing the RSS subset of XML.
 # pacdiff integration is pretty crude.
+# Confused by op varients (-Syu vs -Suy)
 
 function clean_rss ()  # none : xml
 {
     # make xml less unfriendly to grep
     # escape \n | remove literal \n | opening tags get a line
-    wget -q -O - "$rss_feed" | sed "s/^/\\\\n/g" | tr -s "\r\n" " " | sed -r "s/<[^\/]/\n&/g"
+    wget -t 1 -T 10 -q -O - "$rss_feed" | sed "s/^/\\\\n/g" | tr -s "\r\n" " " | sed -r "s/<[^\/]/\n&/g"
 }
 
 function tag_chop ()  # xml string : string
