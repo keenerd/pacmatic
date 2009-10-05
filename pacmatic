@@ -66,7 +66,7 @@ function get_news_log ()  # none : seconds
     fi
 }
 
-function check_news ()
+function check_news ()  # none : news (logfile)
 {
     clean=`clean_rss`
     pubdates=`publication_dates "$clean"`
@@ -79,7 +79,7 @@ function check_news ()
     fi
 }
 
-function pacnew_count ()
+function pacnew_count ()  # none : int
 {
     find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
 }
