@@ -4,6 +4,7 @@
 warn_time="3600"  # seconds
 rss_feed="http://www.archlinux.org/feeds/news/"
 log_file="/var/log/arch-news.log"
+pacdiff_program="pacdiff"
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 
@@ -116,11 +117,11 @@ case "$1" in
 	echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
 	read char
 	if [ -z "$char" ]; then
-	    pacdiff
+	    $pacdiff_program
 	fi
 	case "$char" in
 	    Y|y)
-	        pacdiff
+	        $pacdiff_program
 		;;
 	    N|n)
 	        ;;
