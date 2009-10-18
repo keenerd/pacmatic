@@ -12,7 +12,6 @@ pacdiff_program="pacdiff"
 # Multiple RSS updates are skipped, only reports most recent.
 # Lots of dirty hacks for processing the RSS subset of XML.
 # pacdiff integration is pretty crude.
-# Confused by op varients (-Syu vs -Suy)
 
 function clean_rss ()  # none : xml
 {
@@ -89,7 +88,7 @@ sync_time=`last_sync`
 upgrade_time=`last_upgrade`
 
 case "$1" in 
-    -Syu|-Su)
+    -Syu|-Su|-Suy|-Syyu|-Syuy|-Suyy)
         check_news
         ;;
     -S)
@@ -98,7 +97,7 @@ case "$1" in
             echo -e "\n\nWarning: stale installation, rerun with '-Syu'\n\n"
         fi
 	;;
-    -Sy)
+    -Sy|-Syy)
         check_news
         if [ $(( $current_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
             echo -e "\n\nWarning: stale installation, rerun with '-Syu'\n\n"
