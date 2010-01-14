@@ -9,7 +9,6 @@ pacdiff_program="pacdiff"
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 
 # Issues:
-# Multiple RSS updates are skipped, only reports most recent.
 # Lots of dirty hacks for processing the RSS subset of XML.
 # pacdiff integration is pretty crude.
 
@@ -65,23 +64,38 @@ function get_news_log ()  # none : seconds
     fi
 }
 
+function xml_decode() # string : string
+{
+    echo "$1" | sed 's/\t/ /g' | tr -s ' ' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&amp;/&/g'
+}
+
 function check_news ()  # none : news (logfile)
 {
+    last_news_date=`get_news_log`
     clean=`clean_rss`
-    pubdates=`publication_dates "$clean"`
-    descriptions=`tag_chop "$clean" "description" | grep -v "Recent News Updates"`
-    recent_date=`echo "$pubdates" | head -n 1`
-    recent_news=`echo "$descriptions" | head -n 1`
-    if [ $(( $recent_date )) -gt $(( `get_news_log` )) ]; then
-        echo -e "$recent_news"
-        echo "$recent_date $recent_news" >> $log_file
-    fi
+    pubdates=`mktemp`
+    descriptions=`mktemp`
+    publication_dates "$clean" > "$pubdates"
+    tag_chop "$clean" "description" | grep -v "Recent News Updates" > "$descriptions"
+    # paste is much happier with files
+    paste "$pubdates" "$descriptions" | tac | while read -r line ; do
+	line2=`xml_decode "$line"`
+	this_date=`echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g'`
+	if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
+	    echo "$line2" | cut -d ' ' -f 2- | sed 's|<br />||g' | sed 's|\\n||g'
+	    echo ""
+	    echo "$line2" >> $log_file
+	fi
+    done
+    rm "$pubdates"
+    rm "$descriptions"
 }
 
 function pacnew_count ()  # none : int
 {
     find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
 }
+
 
 current_time=`date +%s`
 sync_time=`last_sync`
