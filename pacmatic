@@ -125,6 +125,12 @@ new_pc=`pacnew_count`
 add_pc=$(( $new_pc - $old_pc ))
 
 # this section is a little clumsy
+
+if [ "$new_pc" = "0" ]; then
+  echo "No pacnew files to update."
+  exit 0
+fi
+
 case "$1" in
     -Syu|-Su|-S|-Sy)
 	echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
