@@ -75,8 +75,9 @@ function check_news ()  # none : news (logfile)
     clean=`clean_rss`
     pubdates=`mktemp`
     descriptions=`mktemp`
+    header="The latest and greatest news from the Arch Linux distribution."
     publication_dates "$clean" > "$pubdates"
-    tag_chop "$clean" "description" | grep -v "Recent News Updates" > "$descriptions"
+    tag_chop "$clean" "description" | grep -v "$header" > "$descriptions"
     # paste is much happier with files
     paste "$pubdates" "$descriptions" | tac | while read -r line ; do
 	line2=`xml_decode "$line"`
