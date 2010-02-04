@@ -1,17 +1,18 @@
 #! /bin/sh
 
 # configs
-warn_time="3600"  # seconds
-rss_feed="http://www.archlinux.org/feeds/news/"
-log_file="/var/log/arch-news.log"
-pacdiff_program="pacdiff"
-pacman_program="pacman"
+[ -z "$warn_time" ]       && warn_time="3600"  # seconds
+[ -z "$rss_feed" ]        && rss_feed="http://www.archlinux.org/feeds/news/"
+[ -z "$log_file" ]        && log_file="/var/log/arch-news.log"
+[ -z "$pacdiff_program" ] && pacdiff_program="pacdiff"
+[ -z "$pacman_program" ]  && pacman_program="pacman"
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 
 # Issues:
 # Lots of dirty hacks for processing the RSS subset of XML.
 # pacdiff integration is pretty crude.
+# Switch to a real config file if it gets one more option.
 
 function clean_rss ()  # none : xml
 {
