@@ -5,6 +5,7 @@ warn_time="3600"  # seconds
 rss_feed="http://www.archlinux.org/feeds/news/"
 log_file="/var/log/arch-news.log"
 pacdiff_program="pacdiff"
+pacman_program="pacman"
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 
@@ -97,7 +98,27 @@ function pacnew_count ()  # none : int
     find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
 }
 
+function docs ()  # none : docs
+{
+    echo -e "Usage: `basename $0` -arg [packages]"
+    echo -e "\nPacmatic is a pacman wrapper that takes care of menial but critial tasks."
+    echo -e "\nThese include"
+    echo -e "\tChecking the archlinux.org news"
+    echo -e "\tReminding if it has been a while since the last sync"
+    echo -e "\tReporting pacnew files"
+    echo -e "\tEditing pacnew files"
+    echo -e "\nThe following environment variables can be set"
+    echo -e "\twarn_time=\"$warn_time\"  # (seconds)"
+    echo -e "\trss_feed=\"$rss_feed\""
+    echo -e "\tlog_file=\"$log_file\""
+    echo -e "\tpacdiff_program=\"$pacdiff_program\""
+    echo -e "\tpacman_program=\"$pacman_program\""
+    echo -e ""
+}
 
+if [ $# -eq 0 ]; then
+    docs
+fi
 current_time=`date +%s`
 sync_time=`last_sync`
 upgrade_time=`last_upgrade`
@@ -121,7 +142,7 @@ case "$1" in
 esac
 
 old_pc=`pacnew_count`
-pacman $*
+$pacman_program $*
 new_pc=`pacnew_count`
 add_pc=$(( $new_pc - $old_pc ))
 
