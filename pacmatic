@@ -157,6 +157,9 @@ esac
 
 old_pc=`pacnew_count`
 $pacman_program $*
+exit_code=$?
+exit_time=`date "+[%F %H:%M]"`
+echo "$exit_time Exited with code $exit_code" >> /var/log/pacman.log
 new_pc=`pacnew_count`
 add_pc=$(( $new_pc - $old_pc ))
 
