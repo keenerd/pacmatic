@@ -1,6 +1,7 @@
 #! /bin/sh
 
 # configs
+# varname=${varname:-default}
 [ -z "$warn_time" ]       && warn_time="3600"  # seconds
 [ -z "$rss_feed" ]        && rss_feed="http://www.archlinux.org/feeds/news/"
 [ -z "$log_file" ]        && log_file="/var/log/arch-news.log"
@@ -14,6 +15,17 @@
 # pacdiff integration is pretty crude.
 # Switch to a real config file if it gets one more option.
 
+# Todo:
+# More unixy env vars.
+# Catch/log pacman return codes.
+# Merge serial seds.
+# Backup db.
+# Low disk check.
+#   df -ka | grep '% /$' | tr -s ' ' | cut -d ' ' -f 4 
+#   but can't actually integrate into pacman
+#   wrote patch for Clyde instead
+# sledgehammer says to watch arch-dev-public and arch-commits arch-dev-public and arch-commits 
+
 function clean_rss ()  # none : xml
 {
     # make xml less unfriendly to grep
@@ -26,6 +38,7 @@ function tag_chop ()  # xml string : string
     # this only works for the innermost tags
     local data=$1
     local tag=$2
+    #sed "s/<[\/]\?$tag>//g"  sed "s|</?$tag>||g"
     echo "$data" | grep -o "<$tag>.*</$tag>" | sed "s/<$tag>//g" | sed "s/<\/$tag>//g"
 }
 
