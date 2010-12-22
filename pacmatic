@@ -2,7 +2,7 @@
 
 # configs
 # varname=${varname:-default}
-[ -z "$warn_time" ]       && warn_time="3600"  # seconds
+[ -z "$warn_time" ]       && warn_time="86400"  # seconds
 [ -z "$rss_feed" ]        && rss_feed="http://www.archlinux.org/feeds/news/"
 [ -z "$log_file" ]        && log_file="/var/log/arch-news.log"
 [ -z "$pacdiff_program" ] && pacdiff_program="pacdiff"
@@ -93,6 +93,11 @@ function check_news ()  # none : news (logfile)
     header="The latest and greatest news from the Arch Linux distribution."
     publication_dates "$clean" > "$pubdates"
     tag_chop "$clean" "description" | grep -v "$header" > "$descriptions"
+    if [[ ! -s "$log_file" ]]; then
+        echo "Initializing news archive, expect a flood of news."
+        echo "This will not happen on subsequent launches."
+        sleep 3
+    fi
     # paste is much happier with files
     paste "$pubdates" "$descriptions" | tac | while read -r line ; do
 	line2=`xml_decode "$line"`
