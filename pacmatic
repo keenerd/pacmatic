@@ -6,6 +6,7 @@
 [ -z "$rss_feed" ]        && rss_feed="http://www.archlinux.org/feeds/news/"
 [ -z "$mail_list" ]       && mail_list="http://mailman.archlinux.org/pipermail/arch-general/$(date '+%Y-%B').txt"
 [ -z "$log_file" ]        && log_file="/var/log/arch-news.log"
+[ -z "$pacman_log" ]      && pacman_log="/var/log/pacman.log"
 [ -z "$pacdiff_program" ] && pacdiff_program="pacdiff"
 [ -z "$pacman_program" ]  && pacman_program="pacman"
 [ -z "$config" ]          && config="$HOME/.config/pacmatic"  # not really a config file ;-)
@@ -73,13 +74,13 @@ log_time()  # datetime : seconds
 last_sync()  # none : datetime
 {
     # can not tell if last sync failed/aborted
-    log_time `grep 'synchronizing package lists' /var/log/pacman.log | tail -n 1`
+    log_time `grep 'synchronizing package lists' "$pacman_log" | tail -n 1`
 }
 
 last_upgrade()  # none : datetime
 {
     # can not tell if last update failed/aborted
-    log_time `grep 'starting full system upgrade' /var/log/pacman.log | tail -n 1`
+    log_time `grep 'starting full system upgrade' "$pacman_log" | tail -n 1`
 }
 
 publication_dates()  # xml : seconds
@@ -153,11 +154,14 @@ docs()  # none : docs
     echo -e "\tlog_file=\"$log_file\""
     echo -e "\tpacdiff_program=\"$pacdiff_program\""
     echo -e "\tpacman_program=\"$pacman_program\""
+    echo -e "\tmail_list=\"$mail_list\""
+    echo -e "\tpacman_log=\"$pacman_log\""
     echo -e ""
 }
 
 if [ $# -eq 0 ]; then
     docs
+    exit
 fi
 current_time=`date +%s`
 sync_time=`last_sync`
@@ -195,7 +199,7 @@ old_pc=`pacnew_count`
 $pacman_program $*
 exit_code=$?
 exit_time=`date "+[%F %H:%M]"`
-echo "$exit_time Exited with code $exit_code" >> /var/log/pacman.log
+echo "$exit_time Exited with code $exit_code" >> "$pacman_log"
 new_pc=`pacnew_count`
 add_pc=$(( $new_pc - $old_pc ))
 
