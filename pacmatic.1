@@ -1,0 +1,56 @@
+.\" man 7 groff_mdoc  Best resource ever
+.Dd April 7, 2011
+.Dt PACMATIC \&1 "Pacmatic Manual"
+.Os " "
+.Sh NAME
+.Nm pacmatic
+.Nd PACMATIC provides performs a bunch of mundane tasks that you must do before every invocation of Pacman.  If you ever once forget to do any, you'll probably break your installation.  So let's have the computer remind us.
+.Sh SYNOPSIS
+.Nm pacmatic -[the same options as pacman] [the same arguments as pacman]
+.Sh DESCRIPTION
+.Nm
+wraps pacman.  All arguments and options are passed directly through to pacman.  What
+.Nm
+adds to pacman is several pre and post operation checks.  Features include reading the archlinux.org news, avoiding -Sy, dealing with pacnew files, reading a mailing list, free space, and logging pacman's exit status.
+.Pp
+.Nm
+can be configured by setting environment variables.  Run
+.Nm
+without any arguments or options to see the variables and values.
+.Pp
+.
+.Sh ENV VARS
+.Pp
+.Bl -tag -width ".." -compact
+.It Cm warn_time
+Seconds between -Sy and -Su
+.Pp
+.It Cm rss_feed
+The new feed to check before updates.
+.Pp
+.It Cm log_file
+Where the RSS news history is cached.
+.Pp
+.It Cm pacdiff_program
+The utility used for merging diffs.
+.Pp
+.It Cm pacman_program
+Command to launch pacman.
+.Pp
+.It Cm mail_list
+A URL to a flat textfile.  (Interpreted to generate year-month.)
+.Pp
+.It Cm pacman_log
+The log file to inspect.
+.Pp
+.Sh AUTHORS
+.An -nosplit
+.Pp
+.Nm
+was written by
+.An Kyle Keen Aq keenerd@gmail.com 
+with bits of code from
+.An Falconindy
+and
+.An Brisbin.
+

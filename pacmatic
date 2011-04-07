@@ -23,10 +23,6 @@
 # More unixy env vars.
 # Merge serial seds.
 # Backup db.
-# Low disk check.
-#   df -ka | grep '% /$' | tr -s ' ' | cut -d ' ' -f 4 
-#   but can't actually integrate into pacman
-#   wrote patch for Clyde instead
 
 # sledgehammer says to watch arch-dev-public and arch-commits 
 # (sledgehammer also reads no MLs)
@@ -134,6 +130,11 @@ check_news()  # none : news (logfile)
     rm "$descriptions"
 }
 
+check_checkspace() # none : return value
+{
+    grep -qs '^[ \t]*CheckSpace' /etc/pacman.conf
+}
+
 pacnew_count()  # none : int
 {
     find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
@@ -141,10 +142,11 @@ pacnew_count()  # none : int
 
 docs()  # none : docs
 {
-    echo -e "Usage: `basename $0` -arg [packages]"
+    echo -e "Usage: `basename $0` -options [packages]"
     echo -e "\nPacmatic is a pacman wrapper that takes care of menial but critial tasks."
     echo -e "\nThese include"
     echo -e "\tChecking the archlinux.org news"
+    echo -e "\tSummarizing the arch-general mailing list"
     echo -e "\tReminding if it has been a while since the last sync"
     echo -e "\tReporting pacnew files"
     echo -e "\tEditing pacnew files"
@@ -174,6 +176,9 @@ case "$1" in
         mail_summary
         wait
         echo "Recent ML chatter: $mail_counts"
+        if ( ! check_checkspace ); then
+            echo -e "\nPlease enable CheckSpace in pacman.conf"
+        fi
         ;;
 esac
 
