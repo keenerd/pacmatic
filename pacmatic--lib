@@ -1,0 +1,140 @@
+#!/usr/bin/env sh
+
+# configs
+# varname=${varname:-default}
+[ -z "$warn_time" ]       && warn_time="86400"  # seconds
+[ -z "$rss_feed" ]        && rss_feed="http://www.archlinux.org/feeds/news/"
+[ -z "$mail_list" ]       && mail_list="http://mailman.archlinux.org/pipermail/arch-general/$(date '+%Y-%B').txt"
+[ -z "$log_file" ]        && log_file="/var/log/arch-news.log"
+[ -z "$pacman_log" ]      && pacman_log="/var/log/pacman.log"
+[ -z "$pacdiff_program" ] && pacdiff_program="pacdiff"
+[ -z "$pacman_program" ]  && pacman_program="pacman"
+[ -z "$config" ]          && config="$HOME/.config/pacmatic"  # not really a config file ;-)
+
+# log file has one line per entry, with a unix time stamp and escaped news blurb
+# keep track of the last mail stamp in $config
+
+# Issues:
+# Lots of dirty hacks for processing the RSS subset of XML.
+# pacdiff integration is pretty crude.
+# Switch to a real config file if it gets one more option.
+
+# Todo:
+# More unixy env vars.
+# Merge serial seds.
+# Backup db.
+# Low disk check.
+#   df -ka | grep '% /$' | tr -s ' ' | cut -d ' ' -f 4
+#   but can't actually integrate into pacman
+#   wrote patch for Clyde instead
+
+# sledgehammer says to watch arch-dev-public and arch-commits
+# (sledgehammer also reads no MLs)
+
+mail_summary()  # None : None, set $mail_counts and save new stamp
+{
+    stamp="."
+    if [ -f "$config" ]; then
+        stamp=$(cat "$config")
+    fi
+    raw=$(curl -s "$mail_list" | sed -n "/$stamp/,\$p")
+    if [ -z "$raw" ]; then
+        # inefficient, but should only happen once a month
+        raw=$(curl -s "$mail_list")
+    fi
+    new_stamp=$(grep '^Date' <<< "$raw" | tail -n 1)
+    mail_counts=$(grep -oF "$(expac -Q ' %n-')" <<< "$raw" | sort | uniq -c | sort -nr  | awk '{sub(/-$/,"",$2); if(NR!=1) printf ", "; printf "%s(%s)",$2,$1}')
+    mkdir -p $(dirname "$config")
+    echo "$new_stamp" > "$config"
+}
+
+clean_rss()  # none : xml
+{
+    # make xml less unfriendly to grep
+    # escape \n | remove literal \n | opening tags get a line
+    wget -t 1 -T 10 -q -O - "$rss_feed" | sed "s/^/\\\\n/g" | tr -s "\r\n" " " | sed -r "s/<[^\/]/\n&/g"
+}
+
+tag_chop()  # xml string : string
+{
+    # this only works for the innermost tags
+    local data=$1
+    local tag=$2
+    #sed "s/<[\/]\?$tag>//g"  sed "s|</?$tag>||g"
+    echo "$data" | grep -o "<$tag>.*</$tag>" | sed "s/<$tag>//g" | sed "s/<\/$tag>//g"
+}
+
+log_time()  # datetime : seconds
+{
+    # turns a timestamp from pacman.log into unix time
+    local stamp=`echo "$1 $2" | grep -o -E "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}"`
+    date -d "$stamp" +%s
+}
+
+last_sync()  # none : datetime
+{
+    # can not tell if last sync failed/aborted
+    log_time `grep 'synchronizing package lists' "$pacman_log" | tail -n 1`
+}
+
+last_upgrade()  # none : datetime
+{
+    # can not tell if last update failed/aborted
+    log_time `grep 'starting full system upgrade' "$pacman_log" | tail -n 1`
+}
+
+publication_dates()  # xml : seconds
+{
+    # collect xml time stamps and unix time them
+    tag_chop "$1" "pubDate" | while read line ; do
+        date -d "$line" +%s
+    done
+}
+
+get_news_log()  # none : seconds
+{
+    # returns timestamp of last news seen
+    if [ -f $log_file ]; then
+        tail -n 1 $log_file | grep -o "^[0-9]*"
+    else
+        echo "0"
+    fi
+}
+
+xml_decode() # string : string
+{
+    echo "$1" | sed 's/\t/ /g' | tr -s ' ' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&amp;/&/g'
+}
+
+check_news()  # none : news (logfile)
+{
+    last_news_date=`get_news_log`
+    clean=`clean_rss`
+    pubdates=`mktemp`
+    descriptions=`mktemp`
+    header="The latest and greatest news from the Arch Linux distribution."
+    publication_dates "$clean" > "$pubdates"
+    tag_chop "$clean" "description" | grep -v "$header" > "$descriptions"
+    if [[ ! -s "$log_file" ]]; then
+        echo "Initializing news archive, expect a flood of news."
+        echo "This will not happen on subsequent launches."
+        sleep 5
+    fi
+    # paste is much happier with files
+    paste "$pubdates" "$descriptions" | tac | while read -r line ; do
+    line2=`xml_decode "$line"`
+    this_date=`echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g'`
+    if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
+        echo "$line2" | cut -d ' ' -f 2- | sed 's|<br />||g' | sed 's|\\n||g'
+        echo ""
+        echo "$line2" >> $log_file
+    fi
+    done
+    rm "$pubdates"
+    rm "$descriptions"
+}
+
+pacnew_count()  # none : int
+{
+    find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
+}
