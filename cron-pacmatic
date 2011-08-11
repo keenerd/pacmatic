@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+
+. /usr/lib/pacmatic--lib
+
+if [[ -z "$mail" ]]; then
+    echo 'You have to set the $mail variable for cron-pacmatic to work'
+    exit 1
+fi
+
+pending_updates() # none : list of packages
+{
+    pacman -Qu | egrep -vi '^(Checking|warning|Remove|Total)' | tr '\n' ' '
+}
+
+# Get pending updates, but only dowload them
+yes | pacman -Suyw --noconfirm
+
+packages=`pending_updates`
+
+if [[ -n $packages ]]; then
+    mail_body=`mktemp`
+    check_news                             >> $mail_body
+    mail_summary                           >> $mail_body
+    echo "Recent ML chatter: $mail_counts" >> $mail_body
+    echo "Pacman updates: $packages"   >> $mail_body
+    cat $mail_body |\
+        mail -s "Updates available on $(hostname)" $mail
+fi
