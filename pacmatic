@@ -4,7 +4,7 @@
 # varname=${varname:-default}
 [ -z "$warn_time" ]       && warn_time="86400"  # seconds
 [ -z "$rss_feed" ]        && rss_feed="http://www.archlinux.org/feeds/news/"
-[ -z "$mail_list" ]       && mail_list="http://mailman.archlinux.org/pipermail/arch-general/$(date '+%Y-%B').txt"
+[ -z "$mail_list" ]       && mail_list="http://mailman.archlinux.org/pipermail/arch-general/$(LANG=C printf '%(%Y-%B)T\n' -1).txt"
 [ -z "$log_file" ]        && log_file="/var/log/arch-news.log"
 [ -z "$pacman_log" ]      && pacman_log="/var/log/pacman.log"
 [ -z "$pacdiff_program" ] && pacdiff_program="pacdiff"
