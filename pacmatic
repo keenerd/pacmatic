@@ -23,6 +23,7 @@
 # More unixy env vars.
 # Merge serial seds.
 # Backup db.
+# Conf file for vars.
 
 # sledgehammer says to watch arch-dev-public and arch-commits 
 # (sledgehammer also reads no MLs)
@@ -121,7 +122,7 @@ check_news()  # none : news (logfile)
 	line2=`xml_decode "$line"`
 	this_date=`echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g'`
 	if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
-	    echo "$line2" | cut -d ' ' -f 2- | sed 's|<br />||g' | sed 's|\\n||g'
+	    echo "$line2" | cut -d ' ' -f 2- | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
 	    echo ""
 	    echo "$line2" >> $log_file
 	fi
@@ -137,7 +138,7 @@ check_checkspace() # none : return value
 
 pacnew_count()  # none : int
 {
-    find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) | wc -l
+    find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) 2> /dev/null | wc -l
 }
 
 docs()  # none : docs
@@ -204,7 +205,9 @@ old_pc=`pacnew_count`
 $pacman_program $*
 exit_code=$?
 exit_time=`date "+[%F %H:%M]"`
-echo "$exit_time Exited with code $exit_code" >> "$pacman_log"
+if [ -w "$pacman_log" ]; then
+    echo "$exit_time Exited with code $exit_code" >> "$pacman_log"
+fi
 new_pc=`pacnew_count`
 add_pc=$(( $new_pc - $old_pc ))
 
