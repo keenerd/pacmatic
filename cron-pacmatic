@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#! /bin/bash
 
 . /usr/bin/pacmatic --as-lib
 
