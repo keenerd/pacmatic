@@ -1,0 +1,38 @@
+#! /bin/bash
+
+. /usr/bin/pacmatic --as-lib
+
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <your@mail.tld>"
+    echo "For this to work, you need to set the mail command correctly"
+    echo "See https://wiki.archlinux.org/index.php/Msmtp#Using_the_mail_command"
+    exit
+fi
+
+init_fakeroot_db()
+{
+    mkdir -p /tmp/localsync
+    ln -s /var/lib/pacman/local /tmp/localsync &>/dev/null
+}
+
+[ -d /tmp/localsync/ ]  || init_fakeroot_db
+
+pending_updates() # none : list of packages
+{
+    pacman -Qqu --dbpath /tmp/localsync/ | egrep -vi '^(Checking|warning|Remove|Total)' | tr '\n' ' '
+}
+
+# Get pending updates in a safe directory
+fakeroot pacman -Syy --dbpath /tmp/localsync/ &> /dev/null
+
+packages=`pending_updates`
+
+if [[ -n $packages ]]; then
+    mail_body=`mktemp`
+    check_news                             >> $mail_body
+    mail_summary                           >> $mail_body
+    echo "Recent ML chatter: $mail_counts" >> $mail_body
+    echo "Pacman updates: $packages"       >> $mail_body
+    cat $mail_body |\
+        mail -s "Updates available on $(hostname)" $1
+fi

@@ -16,6 +16,7 @@ md5sums=('d1e225b855bebfe6e7f031af1a392e14')
 package() {
   cd "$srcdir/$pkgname"
   install -D -m 0755 $pkgname   "$pkgdir/usr/bin/$pkgname"
+  #install -D -m 0755 cron-$pkgname "$pkgdir/usr/bin/cron-$pkgname"
   install -D -m 0644 $pkgname.1 "$pkgdir/usr/share/man/man1/$pkgname.1"
 }
 

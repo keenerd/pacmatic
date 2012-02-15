@@ -25,7 +25,7 @@
 # Backup db.
 # Conf file for vars.
 
-# sledgehammer says to watch arch-dev-public and arch-commits 
+# sledgehammer says to watch arch-dev-public and arch-commits
 # (sledgehammer also reads no MLs)
 
 mail_summary()  # None : None, set $mail_counts and save new stamp
@@ -119,13 +119,13 @@ check_news()  # none : news (logfile)
     fi
     # paste is much happier with files
     paste "$pubdates" "$descriptions" | tac | while read -r line ; do
-	line2=`xml_decode "$line"`
-	this_date=`echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g'`
-	if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
-	    echo "$line2" | cut -d ' ' -f 2- | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
-	    echo ""
-	    echo "$line2" >> $log_file
-	fi
+    line2=`xml_decode "$line"`
+    this_date=`echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g'`
+    if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
+        echo "$line2" | cut -d ' ' -f 2- | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
+        echo ""
+        echo "$line2" >> $log_file
+    fi
     done
     rm "$pubdates"
     rm "$descriptions"
@@ -166,6 +166,9 @@ if [ $# -eq 0 ]; then
     docs
     exit
 fi
+
+[ $1 == "--as-lib" ] && return
+
 current_time=`date +%s`
 sync_time=`last_sync`
 upgrade_time=`last_upgrade`
@@ -183,7 +186,7 @@ case "$1" in
         ;;
 esac
 
-case "$1" in 
+case "$1" in
     -Syu|-Su|-Suy|-Syyu|-Syuy|-Suyy)
         #check_news
         ;;
@@ -192,13 +195,13 @@ case "$1" in
         if [ $(( $sync_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
             echo -e "\nWarning: stale installation, rerun with '-Syu'\n"
         fi
-	;;
+    ;;
     -Sy|-Syy)
         #check_news
         if [ $(( $current_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
             echo -e "\nWarning: stale installation, rerun with '-Syu'\n"
         fi
-	;;
+    ;;
 esac
 
 old_pc=`pacnew_count`
@@ -220,23 +223,21 @@ fi
 
 case "$1" in
     -Syu|-Su|-S|-Sy)
-	echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
-	read char
-	if [ -z "$char" ]; then
-	    $pacdiff_program
-	fi
-	case "$char" in
-	    Y|y)
-	        $pacdiff_program
-		;;
-	    N|n)
-	        ;;
-	    *)
-	        ;;
-	esac
-	;;
+    echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
+    read char
+    if [ -z "$char" ]; then
+        $pacdiff_program
+    fi
+    case "$char" in
+        Y|y)
+            $pacdiff_program
+        ;;
+        N|n)
+            ;;
+        *)
+            ;;
+    esac
+    ;;
     *)
         ;;
 esac
-
-
