@@ -3,7 +3,7 @@
 . /usr/bin/pacmatic --as-lib
 
 if [ $# -eq 0 ]; then
-    echo "usage $0 <your@mail.tld>"
+    echo "Usage: $0 <your@mail.tld>"
     echo "for this to work, you need to set the mail command correctly"
     echo "for example, see https://bbs.archlinux.org/viewtopic.php?id=66822"
     exit
@@ -22,7 +22,7 @@ pending_updates() # none : list of packages
     pacman -Qqu --dbpath /tmp/localsync/ | egrep -vi '^(Checking|warning|Remove|Total)' | tr '\n' ' '
 }
 
-# Get pending updates, but only dowload them
+# Get pending updates in a safe directory
 fakeroot pacman -Syy --dbpath /tmp/localsync/ &> /dev/null
 
 packages=`pending_updates`
