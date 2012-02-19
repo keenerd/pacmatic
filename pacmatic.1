@@ -1,5 +1,5 @@
 .\" man 7 groff_mdoc  Best resource ever
-.Dd April 7, 2011
+.Dd February 18, 2012
 .Dt PACMATIC \&1 "Pacmatic Manual"
 .Os " "
 .Sh NAME
@@ -9,6 +9,7 @@
 will not think for you.  It can not protect your system.  It merely collects and presents information so that you can make an informed choice.
 .Sh SYNOPSIS
 .Nm pacmatic -[the same options as pacman] [the same arguments as pacman]
+.Nm pacmatic --as-lib
 .Sh DESCRIPTION
 .Nm
 wraps pacman.  All arguments and options are passed directly through to pacman.  What
@@ -20,8 +21,15 @@ can be configured by setting environment variables.  Run
 .Nm
 without any arguments or options to see the variables and values.
 .Pp
+To source
+.Nm
+in your own script, use the
+.Nm \--as-lib
+flag.
+.Pp
 .
 .Sh ENV VARS
+These are optional.
 .Pp
 .Bl -tag -width ".." -compact
 .It Cm warn_time
@@ -45,6 +53,13 @@ A URL to a flat textfile.  (Interpreted to generate year-month.)
 .It Cm pacman_log
 The log file to inspect.
 .Pp
+.Sh WRAPPERS
+In case you want even higher levels of automation, there is a
+.Nm cron-pacmatic
+script.  This script can be run periodically and will email you a summary of
+.Nm
+output.
+.Pp
 .Sh AUTHORS
 .An -nosplit
 .Pp
@@ -52,6 +67,7 @@ The log file to inspect.
 was written by
 .An Kyle Keen Aq keenerd@gmail.com 
 with bits of code from
+.An Chmduquesne,
 .An Falconindy
 and
 .An Brisbin.

@@ -160,6 +160,9 @@ docs()  # none : docs
     echo -e "\tmail_list=\"$mail_list\""
     echo -e "\tpacman_log=\"$pacman_log\""
     echo -e ""
+    echo -e "To use Pacmatic's functionality in a script, source with"
+    echo -e "\t. /usr/bin/pacmatic --as-lib"
+    echo -e ""
 }
 
 if [ $# -eq 0 ]; then
@@ -195,13 +198,13 @@ case "$1" in
         if [ $(( $sync_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
             echo -e "\nWarning: stale installation, rerun with '-Syu'\n"
         fi
-    ;;
+        ;;
     -Sy|-Syy)
         #check_news
         if [ $(( $current_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
             echo -e "\nWarning: stale installation, rerun with '-Syu'\n"
         fi
-    ;;
+        ;;
 esac
 
 old_pc=`pacnew_count`
