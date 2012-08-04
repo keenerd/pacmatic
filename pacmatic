@@ -122,7 +122,13 @@ check_news()  # none : news (logfile)
     line2=`xml_decode "$line"`
     this_date=`echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g'`
     if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
-        echo "$line2" | cut -d ' ' -f 2- | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
+    	if [[ `command -v pandoc` != '' ]]; then
+	        echo "$line2" | cut -d ' ' -f 2- | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g' | pandoc -f html -t markdown | sed 's/wrote: /wrote:\n/';
+		elif [[ `command -v html2text` != '' ]]; then
+	        echo "$line2" | cut -d ' ' -f 2- | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g' | html2text | sed 's/wrote: /wrote:\n/';
+		else
+			echo "$line2" | cut -d ' ' -f 2- | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g';
+		fi
         echo ""
         echo "$line2" >> $log_file
     fi
