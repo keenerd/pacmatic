@@ -122,8 +122,13 @@ check_news()  # none : news (logfile)
     line2=`xml_decode "$line"`
     this_date=`echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g'`
     if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
-        echo "$line2" | cut -d ' ' -f 2- | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
-        echo ""
+        line3=$(cut -d ' ' -f 2- <<< "$line2")
+        if which html2text >& /dev/null; then
+            echo "$line3" | html2text -style pretty | sed 's/\\n$//'
+        else
+            echo "$line3" | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
+        fi
+        echo
         echo "$line2" >> $log_file
     fi
     done
