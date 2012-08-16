@@ -49,7 +49,7 @@ clean_rss()  # none : xml
 {
     # make xml less unfriendly to grep
     # escape \n | remove literal \n | opening tags get a line
-    wget -t 1 -T 10 -q -O - "$rss_feed" | sed "s/^/\\\\n/g" | tr -s "\r\n" " " | sed -r "s/<[^\/]/\n&/g"
+    curl --connect-timeout 10 -s -o - "$rss_feed" | sed "s/^/\\\\n/g" | tr -s "\r\n" " " | sed -r "s/<[^\/]/\n&/g"
 }
 
 tag_chop()  # xml string : string
