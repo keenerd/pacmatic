@@ -3,9 +3,11 @@
 . /usr/bin/pacmatic --as-lib
 
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <your@mail.tld>"
-    echo "For this to work, you need to set the mail command correctly"
-    echo "See https://wiki.archlinux.org/index.php/Msmtp#Using_the_mail_command"
+    cat << END
+Usage: $0 <your@mail.tld>
+For this to work, you need to set the mail command correctly
+See https://wiki.archlinux.org/index.php/Msmtp#Using_the_mail_command
+END
     exit
 fi
 
