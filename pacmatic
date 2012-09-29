@@ -149,26 +149,31 @@ pacnew_count()  # none : int
 
 docs()  # none : docs
 {
-    echo -e "Usage: `basename $0` -options [packages]"
-    echo -e "\nPacmatic is a pacman wrapper that takes care of menial but critial tasks."
-    echo -e "\nThese include"
-    echo -e "\tChecking the archlinux.org news"
-    echo -e "\tSummarizing the arch-general mailing list"
-    echo -e "\tReminding if it has been a while since the last sync"
-    echo -e "\tReporting pacnew files"
-    echo -e "\tEditing pacnew files"
-    echo -e "\nThe following environment variables can be set"
-    echo -e "\twarn_time=\"$warn_time\"  # (seconds)"
-    echo -e "\trss_feed=\"$rss_feed\""
-    echo -e "\tlog_file=\"$log_file\""
-    echo -e "\tpacdiff_program=\"$pacdiff_program\""
-    echo -e "\tpacman_program=\"$pacman_program\""
-    echo -e "\tmail_list=\"$mail_list\""
-    echo -e "\tpacman_log=\"$pacman_log\""
-    echo -e ""
-    echo -e "To use Pacmatic's functionality in a script, source with"
-    echo -e "\t. /usr/bin/pacmatic --as-lib"
-    echo -e ""
+    cat << END
+Usage: `basename $0` -options [packages]
+
+Pacmatic is a pacman wrapper that takes care of menial but critial tasks.
+
+These include
+    Checking the archlinux.org news
+    Summarizing the arch-general mailing list
+    Reminding if it has been a while since the last sync
+    Reporting pacnew files
+    Editing pacnew files
+
+The following environment variables can be set
+    warn_time="$warn_time"  # (seconds)
+    rss_feed="$rss_feed"
+    log_file="$log_file"
+    pacdiff_program="$pacdiff_program"
+    pacman_program="$pacman_program"
+    mail_list="$mail_list"
+    pacman_log="$pacman_log"
+
+To use Pacmatic's functionality in a script, source with
+    . /usr/bin/pacmatic --as-lib
+
+END
 }
 
 if [ $# -eq 0 ]; then
