@@ -1,7 +1,7 @@
-# $Id: PKGBUILD 78601 2012-10-21 20:40:13Z kkeen $
+# $Id: PKGBUILD 79784 2012-11-12 14:45:33Z kkeen $
 # Maintainer: Kyle Keen <keenerd@gmail.com>
 pkgname=pacmatic
-pkgver=20121021
+pkgver=20121112
 pkgrel=1
 pkgdesc="A pacman wrapper to avoid bricking your system and such other surprises."
 arch=('any')
@@ -11,8 +11,8 @@ depends=('pacman' 'bash' 'pacman-contrib' 'expac')
 makedepends=()
 optdepends=('vim: for vimdiff'
             'html2text: for prettier news')
-source=(http://kmkeen.com/pacmatic/$pkgname-$pkgver.tar.gz)
-md5sums=('6076fc923c0fc215c3dbe06e06f7405a')
+source=(http://kmkeen.com/$pkgname/$pkgname-$pkgver.tar.gz)
+md5sums=('200a0bda1f1bff73f152517f39b1be2e')
 
 package() {
   cd "$srcdir/$pkgname"
