@@ -1,4 +1,7 @@
-#! /bin/bash
+#!/bin/bash
+
+# set XDG_CONFIG_HOME if not set already
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 # configs
 warn_time="${warn_time:-86400}"  # seconds
@@ -8,7 +11,7 @@ log_file="${log_file:-/var/log/arch-news.log}"
 pacman_log="${pacman_log:-/var/log/pacman.log}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
 pacman_program="${pacman_program:-pacman}"
-config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
+config="${config:-$XDG_CONFIG_HOME/pacmatic}"  # not really a config file ;-)
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 # keep track of the last mail stamp in $config
