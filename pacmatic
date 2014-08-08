@@ -1,6 +1,9 @@
-#! /bin/bash
+#!/bin/bash
 
-# configs
+# set XDG_CONFIG_HOME if not set already
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+# default config
 warn_time="${warn_time:-86400}"  # seconds
 rss_feed="${rss_feed:-https://www.archlinux.org/feeds/news/}"
 mail_list="${mail_list:-https://mailman.archlinux.org/pipermail/arch-general/$(LC_TIME=C printf '%(%Y-%B)T\n' -1).txt}"
@@ -8,7 +11,7 @@ log_file="${log_file:-/var/log/arch-news.log}"
 pacman_log="${pacman_log:-/var/log/pacman.log}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
 pacman_program="${pacman_program:-pacman}"
-config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
+config="${config:-$XDG_CONFIG_HOME/pacmatic}" # we use a folder instead
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 # keep track of the last mail stamp in $config
@@ -27,33 +30,53 @@ config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
 # sledgehammer says to watch arch-dev-public and arch-commits
 # (sledgehammer also reads no MLs)
 
-mail_summary()  # None : None, set $mail_counts and save new stamp
-{
+if [[ -f "$config" ]];then
+    echo "Converting old config format..."
+    mv "$config" "$config.stamp"
+    mkdir -p "$config"
+    mv "$config.stamp" "$config/stamp"
+elif [[ ! -d "$config" ]];then
+    echo "Making configuration folder..."
+    mkdir -p "$config"
+fi
+
+if [[ -f "$config/config" ]];then
+    . "$config/config"
+else
+    cat <<EOF > "$config/config"
+# warn_time=
+# rss_feed=
+# mail_list=
+# log_file=
+# pacman_log=
+# pacdiff_program=
+# pacman_program=
+EOF
+fi
+
+mail_summary() { # None : None, set $mail_counts and save new stamp
     stamp="."
-    if [ -f "$config" ]; then
-        stamp=$(cat "$config")
+    if [[ -f "$config/stamp" ]];  then
+        stamp=$(<"$config/stamp")
     fi
     raw=$(curl -s "$mail_list" | sed -n "/$stamp/,\$p")
-    if [ -z "$raw" ]; then
+    if [[ -z "$raw" ]];  then
         # inefficient, but should only happen once a month
         raw=$(curl -s "$mail_list")
     fi
     new_stamp=$(grep '^Date' <<< "$raw" | tail -n 1)
     mail_counts=$(grep -oF "$(expac -Q ' %n-')" <<< "$raw" | sort | uniq -c | sort -nr  | awk '{sub(/-$/,"",$2); if(NR!=1) printf ", "; printf "%s(%s)",$2,$1}')
-    mkdir -p $(dirname "$config")
-    echo "$new_stamp" > "$config"
+    echo "$new_stamp" > "$config/stamp"
 }
 
-clean_rss()  # none : xml
-{
+clean_rss() { # none : xml
     # make xml less unfriendly to grep
     # escape \n | remove literal \n | opening tags get a line
     curl --connect-timeout 10 -s -o - "$rss_feed" | \
     sed "s/^/\\\\n/g" | tr -s "\r\n" " " | sed -r "s/<[^\/]/\n&/g"
 }
 
-tag_chop()  # xml string : string
-{
+tag_chop() { # xml string : string
     # this only works for the innermost tags
     local data=$1
     local tag=$2
@@ -61,50 +84,43 @@ tag_chop()  # xml string : string
     echo "$data" | grep -o "<$tag>.*</$tag>" | sed "s/<$tag>//g" | sed "s/<\/$tag>//g"
 }
 
-log_time()  # datetime : seconds
-{
+log_time() { # datetime : seconds
     # turns a timestamp from pacman.log into unix time
     local stamp=$(echo "$1 $2" | grep -o -E "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}")
     date -d "$stamp" +%s
 }
 
-last_sync()  # none : datetime
-{
+last_sync() { # none : datetime
     # can not tell if last sync failed/aborted
     log_time $(grep 'synchronizing package lists' "$pacman_log" | tail -n 1)
 }
 
-last_upgrade()  # none : datetime
-{
+last_upgrade() { # none : datetime
     # can not tell if last update failed/aborted
     log_time $(grep 'starting full system upgrade' "$pacman_log" | tail -n 1)
 }
 
-publication_dates()  # xml : seconds
-{
+publication_dates() { # xml : seconds
     # collect xml time stamps and unix time them
     tag_chop "$1" "pubDate" | while read line ; do
         date -d "$line" +%s
     done
 }
 
-get_news_log()  # none : seconds
-{
+get_news_log() { # none : seconds
     # returns timestamp of last news seen
-    if [ -f $log_file ]; then
+    if [[ -f $log_file ]];  then
         tail -n 1 $log_file | grep -o "^[0-9]*"
     else
         echo "0"
     fi
 }
 
-xml_decode() # string : string
-{
+xml_decode() { # string : string
     echo "$1" | sed 's/\t/ /g' | tr -s ' ' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&amp;/&/g'
 }
 
-check_news()  # none : news (logfile)
-{
+check_news() { # none : news (logfile)
     last_news_date=$(get_news_log)
     clean=$(clean_rss)
     pubdates=$(mktemp)
@@ -121,7 +137,7 @@ check_news()  # none : news (logfile)
     paste "$pubdates" "$descriptions" | tac | while read -r line ; do
     line2=$(xml_decode "$line")
     this_date=$(echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g')
-    if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
+    if [[ $(( $this_date )) -gt $(( $last_news_date )) ]];  then
         line3=$(cut -d ' ' -f 2- <<< "$line2")
         if which html2text >& /dev/null; then
             echo "$line3" | html2text -style pretty | sed 's/\\n$//'
@@ -136,22 +152,19 @@ check_news()  # none : news (logfile)
     rm "$descriptions"
 }
 
-check_checkspace() # none : return value
-{
+check_checkspace() { # none : return value
     grep -qs '^[ \t]*CheckSpace' /etc/pacman.conf
 }
 
-pacnew_count()  # none : int
-{
+pacnew_count() { # none : int
     find /etc/ \( -name \*.pacnew -o -name \*.pacorig -o -name \*.pacsave \) 2> /dev/null | wc -l
 }
 
-docs()  # none : docs
-{
-    cat << END
-Usage: `basename $0` -options [packages]
+docs() { # none : docs
+    cat <<END
+Usage: `basename "$0"` -options [packages]
 
-Pacmatic is a pacman wrapper that takes care of menial but critial tasks.
+Pacmatic is a pacman wrapper that takes care of menial but critical tasks.
 
 These include
     Checking the archlinux.org news
@@ -160,7 +173,7 @@ These include
     Reporting pacnew files
     Editing pacnew files
 
-The following environment variables can be set
+The following variables can be set in either the config file or the environment:
     warn_time="$warn_time"  # (seconds)
     rss_feed="$rss_feed"
     log_file="$log_file"
@@ -169,18 +182,25 @@ The following environment variables can be set
     mail_list="$mail_list"
     pacman_log="$pacman_log"
 
+The config file is located at "$XDG_CONFIG_HOME/pacmatic/config"
+
 To use Pacmatic's functionality in a script, source with
-    . /usr/bin/pacmatic --as-lib
+    . $(type -fPp "$0") --as-lib
+
+Originally written by Kyle Keen, this is a fork by Somasis.
+http://github.com/Somasis/pacmatic
 
 END
 }
 
-if [ $# -eq 0 ]; then
+GREP_OPTIONS=
+
+if [[ $# -eq 0 ]];  then
     docs
     exit
 fi
 
-[ $1 == "--as-lib" ] && return
+[[ "$1" == "--as-lib" ]] && return
 
 current_time=$(date +%s)
 sync_time=$(last_sync)
@@ -192,7 +212,9 @@ case "$1" in
         check_news &
         mail_summary
         wait
-        echo "Recent ML chatter: $mail_counts"
+        if [[ ! -z "$mail_counts" ]];then
+              echo "Recent ML chatter: $mail_counts"
+        fi
         if ( ! check_checkspace ); then
             echo -e "\nPlease enable CheckSpace in pacman.conf"
         fi
@@ -205,23 +227,23 @@ case "$1" in
         ;;
     -S)
         #check_news
-        if [ $(( $sync_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
+        if [[ $(( $sync_time - $upgrade_time )) -gt $(( $warn_time )) ]];  then
             echo -e "\nWarning: stale installation, rerun with '-Syu'\n"
         fi
         ;;
     -Sy|-Syy)
         #check_news
-        if [ $(( $current_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
+        if [[ $(( $current_time - $upgrade_time )) -gt $(( $warn_time )) ]];  then
             echo -e "\nWarning: stale installation, rerun with '-Syu'\n"
         fi
         ;;
 esac
 
 old_pc=$(pacnew_count)
-$pacman_program $*
+eval "$pacman_program $*"
 exit_code=$?
 exit_time=$(date "+[%F %H:%M]")
-if [ -w "$pacman_log" ]; then
+if [[ -w "$pacman_log" ]];  then
     echo "$exit_time Exited with code $exit_code" >> "$pacman_log"
 fi
 new_pc=$(pacnew_count)
@@ -229,8 +251,7 @@ add_pc=$(( $new_pc - $old_pc ))
 
 # this section is a little clumsy
 
-if [ "$new_pc" = "0" ]; then
-  echo "No pacnew files to update."
+if [[ "$new_pc" -eq 0 ]];  then
   exit 0
 fi
 
@@ -238,12 +259,12 @@ case "$1" in
     -Syu|-Su|-S|-Sy|-Syyu|-Syy)
     echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
     read char
-    if [ -z "$char" ]; then
-        $pacdiff_program
+    if [[ -z "$char" ]];  then
+        eval "$pacdiff_program"
     fi
     case "$char" in
         Y|y)
-            $pacdiff_program
+            eval "$pacdiff_program"
         ;;
         N|n)
             ;;
