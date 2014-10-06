@@ -25,7 +25,6 @@ config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
 # Conf file for vars.
 # edit pacnews from newest to oldest
 # fix \n in news?
-# add zsh _pacmatic
 # mailing list assumes gz'd text archives
 
 # sledgehammer says to watch arch-dev-public and arch-commits
