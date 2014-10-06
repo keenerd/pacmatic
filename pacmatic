@@ -3,7 +3,7 @@
 # configs
 warn_time="${warn_time:-86400}"  # seconds
 rss_feed="${rss_feed:-https://www.archlinux.org/feeds/news/}"
-mail_list="${mail_list:-https://mailman.archlinux.org/pipermail/arch-general/$(LC_TIME=C printf '%(%Y-%B)T\n' -1).txt}"
+mail_list="${mail_list:-https://lists.archlinux.org/pipermail/arch-general/$(LC_TIME=C printf '%(%Y-%B)T\n' -1).txt.gz}"
 log_file="${log_file:-/var/log/arch-news.log}"
 pacman_log="${pacman_log:-/var/log/pacman.log}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
@@ -23,9 +23,15 @@ config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
 # Merge serial seds.
 # Backup db.
 # Conf file for vars.
+# edit pacnews from newest to oldest
+# fix \n in news?
+# add zsh _pacmatic
+# mailing list assumes gz'd text archives
 
 # sledgehammer says to watch arch-dev-public and arch-commits
 # (sledgehammer also reads no MLs)
+
+# borrow from https://bbs.archlinux.org/viewtopic.php?id=163398
 
 mail_summary()  # None : None, set $mail_counts and save new stamp
 {
@@ -33,10 +39,10 @@ mail_summary()  # None : None, set $mail_counts and save new stamp
     if [ -f "$config" ]; then
         stamp=$(cat "$config")
     fi
-    raw=$(curl -s "$mail_list" | sed -n "/$stamp/,\$p")
+    raw=$(curl -s "$mail_list" | zcat | sed -n "/$stamp/,\$p")
     if [ -z "$raw" ]; then
         # inefficient, but should only happen once a month
-        raw=$(curl -s "$mail_list")
+        raw=$(curl -s "$mail_list" | zcat)
     fi
     new_stamp=$(grep '^Date' <<< "$raw" | tail -n 1)
     mail_counts=$(grep -oF "$(expac -Q ' %n-')" <<< "$raw" | sort | uniq -c | sort -nr  | awk '{sub(/-$/,"",$2); if(NR!=1) printf ", "; printf "%s(%s)",$2,$1}')
