@@ -180,6 +180,9 @@ To use Pacmatic's functionality in a script, source with
 END
 }
 
+#Avoids parsing errors if user changed their GREP_OPTIONS
+GREP_OPTIONS=
+
 if [ $# -eq 0 ]; then
     docs
     exit
