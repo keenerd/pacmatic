@@ -9,6 +9,7 @@ pacman_log="${pacman_log:-/var/log/pacman.log}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
 pacman_program="${pacman_program:-pacman}"
 config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
+h2t_options="--protect-links --ignore-images"
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 # keep track of the last mail stamp in $config
@@ -129,7 +130,7 @@ check_news()  # none : news (logfile)
     if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
         line3=$(cut -d ' ' -f 2- <<< "$line2")
         if which html2text >& /dev/null; then
-            echo "$line3" | html2text -style pretty | sed 's/\\n$//'
+            echo "$line3" | html2text $h2t_options | sed 's/\\n$//'
         else
             echo "$line3" | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
         fi
