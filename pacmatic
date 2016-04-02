@@ -39,15 +39,17 @@ mail_summary()  # None : None, set $mail_counts and save new stamp
     if [ -f "$config" ]; then
         stamp=$(cat "$config")
     fi
-    raw=$(curl -s "$mail_list" | zcat | sed -n "/$stamp/,\$p")
-    if [ -z "$raw" ]; then
-        # inefficient, but should only happen once a month
-        raw=$(curl -s "$mail_list" | zcat)
+    raw=$(curl -s "$mail_list" | (zcat 2>/dev/null))
+    if [ -n "$raw" ]; then
+        update=$(sed -n "/$stamp/,\$p" <<< "$raw")
+        if [ -n "$update" ]; then
+            raw=$update
+        fi
+        new_stamp=$(grep '^Date' <<< "$raw" | tail -n 1)
+        mail_counts=$(grep -oF "$(expac -Q ' %n-')" <<< "$raw" | sort | uniq -c | sort -nr  | awk '{sub(/-$/,"",$2); if(NR!=1) printf ", "; printf "%s(%s)",$2,$1}')
+        mkdir -p $(dirname "$config")
+        echo "$new_stamp" > "$config"
     fi
-    new_stamp=$(grep '^Date' <<< "$raw" | tail -n 1)
-    mail_counts=$(grep -oF "$(expac -Q ' %n-')" <<< "$raw" | sort | uniq -c | sort -nr  | awk '{sub(/-$/,"",$2); if(NR!=1) printf ", "; printf "%s(%s)",$2,$1}')
-    mkdir -p $(dirname "$config")
-    echo "$new_stamp" > "$config"
 }
 
 clean_rss()  # none : xml
