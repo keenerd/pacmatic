@@ -159,7 +159,7 @@ docs()  # none : docs
     cat << END
 Usage: `basename $0` -options [packages]
 
-Pacmatic is a pacman wrapper that takes care of menial but critial tasks.
+Pacmatic is a pacman wrapper that takes care of menial but critical tasks.
 
 These include
     Checking the archlinux.org news
