@@ -58,7 +58,11 @@ In case you want even higher levels of automation, there is a
 .Nm cron-pacmatic
 script.  This script can be run periodically and will email you a summary of
 .Nm
-output.
+output. The
+.Nm pacmatic@.timer
+systemd unit is provided to schedule it. Enable it as
+.Ic pacmatic@ Ns Em your\ex40mail.tld Ns Ic .timer
+(with escaping).
 .Pp
 .Sh AUTHORS
 .An -nosplit

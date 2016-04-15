@@ -1,0 +1,8 @@
+[Unit]
+Description=Email list of pending updates to %I timer
+
+[Timer]
+OnCalendar=daily UTC
+
+[Install]
+WantedBy=multi-user.target

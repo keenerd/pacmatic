@@ -1,0 +1,6 @@
+[Unit]
+Description=Email list of pending updates to %I
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/cron-pacmatic %I
