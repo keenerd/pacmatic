@@ -36,5 +36,5 @@ if [[ -n $packages ]]; then
     echo "Recent ML chatter: $mail_counts" >> $mail_body
     echo "Pacman updates: $packages"       >> $mail_body
     cat $mail_body |\
-        mail -s "Updates available on $(hostname)" $1
+        mail -# -s "Updates available on $(hostname)" $1
 fi
