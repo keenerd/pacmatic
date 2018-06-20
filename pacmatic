@@ -6,6 +6,7 @@ rss_feed="${rss_feed:-https://www.archlinux.org/feeds/news/}"
 mail_list="${mail_list:-https://lists.archlinux.org/pipermail/arch-general/$(LC_ALL=C printf '%(%Y-%B)T\n' -1).txt.gz}"
 log_file="${log_file:-/var/log/arch-news.log}"
 pacman_log="${pacman_log:-/var/log/pacman.log}"
+pacnews_warn_only="${pacnews_warn_only:-false}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
 pacman_program="${pacman_program:-pacman}"
 config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
@@ -244,6 +245,10 @@ fi
 
 case "$1" in
     -Syu|-Su|-S|-Sy|-Syyu|-Syy)
+    if [ $pacnews_warn_only != "false" ]; then
+        echo -en "\n$new_pc pacnew files found ($add_pc added). Exiting...\n"
+        exit 0
+    fi
     echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
     read char
     if [ -z "$char" ]; then
