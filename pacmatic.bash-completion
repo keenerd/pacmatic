@@ -1,0 +1,22 @@
+# load upstream completion
+_completion_loader pacman
+
+# get upstream completion specification
+completion_spec=$(complete -p pacman)
+
+# use upstream specification for our own purpose
+#
+# for example, if this is upstream:
+#
+#     complete -o default -F _pacman pacman
+#
+# we want to turn that into this:
+#
+#     complete -o default -F _pacman pacmatic
+#
+eval "${completion_spec/ pacman/ pacmatic}"
+
+# clean up
+unset completion_spec
+
+# ex: filetype=sh
