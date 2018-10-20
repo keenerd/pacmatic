@@ -15,7 +15,7 @@ optdepends=('vim: for vimdiff'
 source=("http://kmkeen.com/$pkgname/$pkgname-$pkgver.tar.gz"
         "_pacmatic")
 md5sums=('1fe11adaa39aae9d3146ddbc3808eb23'
-         '1c369c8fe595cbb41d04e214efd39a1e')
+         'b5ae396755d5859740b0b0e4df53d607')
 
 package() {
   cd "$srcdir/$pkgname"
