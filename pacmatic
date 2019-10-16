@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # configs
 warn_time="${warn_time:-86400}"  # seconds
@@ -9,7 +9,7 @@ pacman_log="${pacman_log:-/var/log/pacman.log}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
 pacman_program="${pacman_program:-pacman}"
 config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
-h2t_options="--protect-links --ignore-images"
+h2t_options=('--protect-links' '--ignore-images')
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 # keep track of the last mail stamp in $config
@@ -47,7 +47,7 @@ mail_summary()  # None : None, set $mail_counts and save new stamp
         fi
         new_stamp=$(grep '^Date' <<< "$raw" | tail -n 1)
         mail_counts=$(grep -oF "$(expac -Q ' %n-')" <<< "$raw" | sort | uniq -c | sort -nr  | awk '{sub(/-$/,"",$2); if(NR!=1) printf ", "; printf "%s(%s)",$2,$1}')
-        mkdir -p $(dirname "$config")
+        mkdir -p "$(dirname "$config")"
         echo "$new_stamp" > "$config"
     fi
 }
@@ -72,26 +72,27 @@ tag_chop()  # xml string : string
 log_time()  # datetime : seconds
 {
     # turns a timestamp from pacman.log into unix time
-    local stamp=$(echo "$1 $2" | grep -o -E "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}")
+    local stamp
+    stamp=$(echo "$1" | grep -o -E "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}")
     date -d "$stamp" +%s
 }
 
 last_sync()  # none : datetime
 {
     # can not tell if last sync failed/aborted
-    log_time $(grep 'synchronizing package lists' "$pacman_log" | tail -n 1)
+    log_time "$(grep 'synchronizing package lists' "$pacman_log" | tail -n 1)"
 }
 
 last_upgrade()  # none : datetime
 {
     # can not tell if last update failed/aborted
-    log_time $(grep 'starting full system upgrade' "$pacman_log" | tail -n 1)
+    log_time "$(grep 'starting full system upgrade' "$pacman_log" | tail -n 1)"
 }
 
 publication_dates()  # xml : seconds
 {
     # collect xml time stamps and unix time them
-    tag_chop "$1" "pubDate" | while read line ; do
+    tag_chop "$1" "pubDate" | while read -r line; do
         date -d "$line" +%s
     done
 }
@@ -99,8 +100,8 @@ publication_dates()  # xml : seconds
 get_news_log()  # none : seconds
 {
     # returns timestamp of last news seen
-    if [ -f $log_file ]; then
-        tail -n 1 $log_file | grep -o "^[0-9]*"
+    if [ -f "$log_file" ]; then
+        tail -n 1 "$log_file" | grep -o "^[0-9]*"
     else
         echo "0"
     fi
@@ -129,15 +130,15 @@ check_news()  # none : news (logfile)
     paste "$pubdates" "$descriptions" | tac | while read -r line ; do
     line2=$(xml_decode "$line")
     this_date=$(echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g')
-    if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
+    if ((this_date > last_news_date)); then
         line3=$(cut -d ' ' -f 2- <<< "$line2")
-        if which html2text >& /dev/null; then
-            echo "$line3" | html2text $h2t_options | sed 's/\\n$//'
+        if command -v html2text >& /dev/null; then
+            echo "$line3" | html2text "${h2t_options[@]}" | sed 's/\\n$//'
         else
             echo "$line3" | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
         fi
         echo
-        echo "$line2" >> $log_file
+        echo "$line2" >> "$log_file"
     fi
     done
     rm "$pubdates"
@@ -157,7 +158,7 @@ pacnew_count()  # none : int
 docs()  # none : docs
 {
     cat << END
-Usage: `basename $0` -options [packages]
+Usage: $(basename "$0") -options [packages]
 
 Pacmatic is a pacman wrapper that takes care of menial but critial tasks.
 
@@ -188,7 +189,7 @@ if [ $# -eq 0 ]; then
     exit
 fi
 
-[ $1 == "--as-lib" ] && return
+[ "$1" == "--as-lib" ] && return
 
 current_time=$(date +%s)
 sync_time=$(last_sync)
@@ -213,27 +214,27 @@ case "$1" in
         ;;
     -S)
         #check_news
-        if [ $(( $sync_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
+        if ((sync_time - upgrade_time > warn_time)); then
             echo -e "\nWarning: stale installation, rerun with '-Syu'\n"
         fi
         ;;
     -Sy|-Syy)
         #check_news
-        if [ $(( $current_time - $upgrade_time )) -gt $(( $warn_time )) ]; then
+        if ((current_time - upgrade_time > warn_time)); then
             echo -e "\nWarning: stale installation, rerun with '-Syu'\n"
         fi
         ;;
 esac
 
 old_pc=$(pacnew_count)
-$pacman_program $*
+$pacman_program "$@"
 exit_code=$?
 exit_time=$(date "+[%F %H:%M]")
 if [ -w "$pacman_log" ]; then
     echo "$exit_time Exited with code $exit_code" >> "$pacman_log"
 fi
 new_pc=$(pacnew_count)
-add_pc=$(( $new_pc - $old_pc ))
+add_pc=$((new_pc - old_pc))
 
 # this section is a little clumsy
 
@@ -244,21 +245,16 @@ fi
 
 case "$1" in
     -Syu|-Su|-S|-Sy|-Syyu|-Syy)
-    echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
-    read char
-    if [ -z "$char" ]; then
-        $pacdiff_program
-    fi
-    case "$char" in
-        Y|y)
-            $pacdiff_program
+        echo -en "\n$new_pc pacnew files found ($add_pc added).  Update files now? (Y/n) "
+        read -r char
+        case "$char" in
+            Y|y|'')
+                $pacdiff_program
+                ;;
+            N|n|*)
+                ;;
+        esac
         ;;
-        N|n)
-            ;;
-        *)
-            ;;
-    esac
-    ;;
     *)
         ;;
 esac
