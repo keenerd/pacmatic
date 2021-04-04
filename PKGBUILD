@@ -1,7 +1,8 @@
 # $Id: PKGBUILD 100043 2013-10-31 15:45:57Z kkeen $
 # Maintainer: Kyle Keen <keenerd@gmail.com>
+# Maintainer: Erik Nelson <erik@nsk.io>
 pkgname=pacmatic
-pkgver=20141006
+pkgver=movefix
 pkgrel=1
 pkgdesc="A pacman wrapper to avoid bricking your system and such other surprises."
 arch=('any')
@@ -12,9 +13,9 @@ makedepends=()
 optdepends=('vim: for vimdiff'
             'html2text: for prettier news'
             'fakeroot: for cron-pacmatic script')
-source=("http://kmkeen.com/$pkgname/$pkgname-$pkgver.tar.gz"
+source=("https://github.com/eriknelson/pacmatic/archive/move-fix.tar.gz"
         "_pacmatic")
-md5sums=('1fe11adaa39aae9d3146ddbc3808eb23'
+md5sums=('d3d08a542a314a4392ef86de71d34b21'
          '1c369c8fe595cbb41d04e214efd39a1e')
 
 package() {
